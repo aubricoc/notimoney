@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.content.Context;
 import android.os.AsyncTask;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import org.json.JSONObject;
 
@@ -17,6 +18,11 @@ import java.util.Random;
 public class CurrencyService {
 
     public static void getRate(Context context) {
+        Log.i("notimoney", "Get rate");
+        if (CouchbaseService.haveTodayRate(context)) {
+            Log.i("notimoney", "Today have rate");
+            return;
+        }
         new GetCurrency(context).execute("EUR", "COP");
     }
 
@@ -55,6 +61,9 @@ public class CurrencyService {
 
         @Override
         protected void onPostExecute(Double result) {
+
+            CouchbaseService.saveRate(context, result);
+            Log.i("notimoney", "Rate saved");
 
             NotificationManager mNotificationManager =
                     (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
