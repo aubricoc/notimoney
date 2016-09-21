@@ -1,36 +1,14 @@
 package cat.aubricoc.notimoney;
 
-import android.app.AlarmManager;
-import android.app.PendingIntent;
 import android.content.ComponentName;
-import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.AsyncTask;
-import android.os.SystemClock;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.TextView;
+import android.support.v7.app.AppCompatActivity;
+import android.widget.ArrayAdapter;
+import android.widget.ListView;
 
-import org.json.JSONObject;
-import org.json.JSONTokener;
-import org.w3c.dom.Element;
-import org.w3c.dom.NodeList;
-import org.xml.sax.InputSource;
-import org.xml.sax.XMLReader;
-
-import java.io.BufferedReader;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
-import java.util.Calendar;
-
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import javax.xml.xpath.XPath;
-import javax.xml.xpath.XPathConstants;
-import javax.xml.xpath.XPathFactory;
+import java.util.Collections;
+import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -48,11 +26,9 @@ public class MainActivity extends AppCompatActivity {
 
         AlarmService.configure(this);
 
-        findViewById(R.id.go).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                CurrencyService.getRate(MainActivity.this);
-            }
-        });
+        List<Rate> rates = CouchbaseService.getAllRates(this);
+        Collections.sort(rates);
+        ListView listView = (ListView) findViewById(R.id.list);
+        listView.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, rates));
     }
 }

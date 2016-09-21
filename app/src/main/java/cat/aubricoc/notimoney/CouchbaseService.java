@@ -10,13 +10,17 @@ import com.couchbase.lite.Manager;
 import com.couchbase.lite.Mapper;
 import com.couchbase.lite.Query;
 import com.couchbase.lite.QueryEnumerator;
+import com.couchbase.lite.QueryRow;
 import com.couchbase.lite.View;
 import com.couchbase.lite.android.AndroidContext;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -61,6 +65,25 @@ public class CouchbaseService {
             QueryEnumerator queryEnumerator = query.run();
             return queryEnumerator.hasNext();
         } catch (CouchbaseLiteException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static List<Rate> getAllRates(Context context) {
+        Database database = getDatabase(context);
+        Query query = database.createAllDocumentsQuery();
+        try {
+            List<Rate> list = new ArrayList<>();
+            QueryEnumerator queryEnumerator = query.run();
+            while (queryEnumerator.hasNext()) {
+                QueryRow row = queryEnumerator.next();
+                Document document = row.getDocument();
+                String day = (String) document.getProperty("day");
+                Double rate = (Double) document.getProperty("rate");
+                list.add(new Rate(DATE_FORMAT.parse(day), rate));
+            }
+            return list;
+        } catch (CouchbaseLiteException | ParseException e) {
             throw new RuntimeException(e);
         }
     }
