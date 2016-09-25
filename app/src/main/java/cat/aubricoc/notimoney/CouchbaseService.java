@@ -5,13 +5,10 @@ import android.content.Context;
 import com.couchbase.lite.CouchbaseLiteException;
 import com.couchbase.lite.Database;
 import com.couchbase.lite.Document;
-import com.couchbase.lite.Emitter;
 import com.couchbase.lite.Manager;
-import com.couchbase.lite.Mapper;
 import com.couchbase.lite.Query;
 import com.couchbase.lite.QueryEnumerator;
 import com.couchbase.lite.QueryRow;
-import com.couchbase.lite.View;
 import com.couchbase.lite.android.AndroidContext;
 
 import java.io.IOException;
@@ -51,19 +48,18 @@ public class CouchbaseService {
     public static boolean haveTodayRate(Context context) {
         final String today = DATE_FORMAT.format(new Date());
         Database database = getDatabase(context);
-        View view = database.getView("today");
-        view.setMap(new Mapper() {
-            @Override
-            public void map(Map<String, Object> document, Emitter emitter) {
-                if (today.equals(document.get("day"))) {
-                    emitter.emit(document.get("day"), document.get("rate"));
-                }
-            }
-        }, "1");
-        Query query = view.createQuery();
+        Query query = database.createAllDocumentsQuery();
         try {
             QueryEnumerator queryEnumerator = query.run();
-            return queryEnumerator.hasNext();
+            while (queryEnumerator.hasNext()) {
+                QueryRow row = queryEnumerator.next();
+                Document document = row.getDocument();
+                String day = (String) document.getProperty("day");
+                if (today.equals(day)) {
+                    return true;
+                }
+            }
+            return false;
         } catch (CouchbaseLiteException e) {
             throw new RuntimeException(e);
         }
@@ -84,6 +80,15 @@ public class CouchbaseService {
             }
             return list;
         } catch (CouchbaseLiteException | ParseException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void clearRates(Context context) {
+        Database database = getDatabase(context);
+        try {
+            database.delete();
+        } catch (CouchbaseLiteException e) {
             throw new RuntimeException(e);
         }
     }
